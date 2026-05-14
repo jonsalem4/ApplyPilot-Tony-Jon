@@ -475,7 +475,10 @@ def doctor() -> None:
         )
     else:
         console.print("[bold green]You're ready to fully launch ApplyPilot.[/bold green]")
-        console.print("[dim]Next steps: run [bold]applypilot run[/bold], then [bold]applypilot apply[/bold].[/dim]")
+        console.print(
+            "[dim]Next steps: run [bold]applypilot run[/bold] to discover and prepare jobs, "
+            "then [bold]applypilot apply[/bold] to submit applications.[/dim]"
+        )
 
     console.print()
 
