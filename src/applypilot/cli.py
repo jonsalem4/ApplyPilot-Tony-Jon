@@ -363,7 +363,9 @@ def doctor() -> None:
         results.append(("resume.txt", ok_mark, str(RESUME_PATH)))
     elif RESUME_PDF_PATH.exists():
         results.append(("resume.txt", warn_mark, "Only PDF found — plain-text needed for AI stages"))
-        launch_requirements.append("Add a plain-text [bold]resume.txt[/bold] during [bold]applypilot init[/bold] for scoring and tailoring.")
+        launch_requirements.append(
+            "Add a plain-text [bold]resume.txt[/bold] during [bold]applypilot init[/bold] for AI scoring, tailoring, and form-answer generation."
+        )
     else:
         results.append(("resume.txt", fail_mark, "Run 'applypilot init' to add your resume"))
         launch_requirements.append("Add your resume with [bold]applypilot init[/bold] so AI stages and auto-apply can use it.")
@@ -464,7 +466,7 @@ def doctor() -> None:
 
     console.print()
     if launch_requirements:
-        console.print("[bold yellow]To fully launch ApplyPilot, you still need:[/bold yellow]")
+        console.print("[bold yellow]To run the complete end-to-end pipeline, you still need:[/bold yellow]")
         for item in launch_requirements:
             console.print(f"  • {item}")
         console.print(
