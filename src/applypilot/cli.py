@@ -211,7 +211,7 @@ def apply(
             raise typer.Exit(code=1)
 
     if gen:
-        from applypilot.apply.launcher import gen_prompt, BASE_CDP_PORT
+        from applypilot.apply.launcher import gen_prompt
         target = url or ""
         if not target:
             console.print("[red]--gen requires --url to specify which job.[/red]")
@@ -222,7 +222,7 @@ def apply(
             raise typer.Exit(code=1)
         mcp_path = _profile_path.parent / ".mcp-apply-0.json"
         console.print(f"[green]Wrote prompt to:[/green] {prompt_file}")
-        console.print(f"\n[bold]Run manually:[/bold]")
+        console.print("\n[bold]Run manually:[/bold]")
         console.print(
             f"  claude --model {model} -p "
             f"--mcp-config {mcp_path} "
@@ -338,7 +338,7 @@ def doctor() -> None:
     import shutil
     from applypilot.config import (
         load_env, PROFILE_PATH, RESUME_PATH, RESUME_PDF_PATH,
-        SEARCH_CONFIG_PATH, ENV_PATH, get_chrome_path,
+        SEARCH_CONFIG_PATH, get_chrome_path,
     )
 
     load_env()
@@ -348,6 +348,7 @@ def doctor() -> None:
     warn_mark = "[yellow]WARN[/yellow]"
 
     results: list[tuple[str, str, str]] = []  # (check, status, note)
+    launch_requirements: list[str] = []
 
     # --- Tier 1 checks ---
     # Profile
@@ -355,20 +356,26 @@ def doctor() -> None:
         results.append(("profile.json", ok_mark, str(PROFILE_PATH)))
     else:
         results.append(("profile.json", fail_mark, "Run 'applypilot init' to create"))
+        launch_requirements.append("Run [bold]applypilot init[/bold] to create [bold]profile.json[/bold].")
 
     # Resume
     if RESUME_PATH.exists():
         results.append(("resume.txt", ok_mark, str(RESUME_PATH)))
     elif RESUME_PDF_PATH.exists():
         results.append(("resume.txt", warn_mark, "Only PDF found — plain-text needed for AI stages"))
+        launch_requirements.append(
+            "Add a plain-text [bold]resume.txt[/bold] during [bold]applypilot init[/bold] for AI scoring, tailoring, and form-answer generation."
+        )
     else:
         results.append(("resume.txt", fail_mark, "Run 'applypilot init' to add your resume"))
+        launch_requirements.append("Add your resume with [bold]applypilot init[/bold] so AI stages and auto-apply can use it.")
 
     # Search config
     if SEARCH_CONFIG_PATH.exists():
         results.append(("searches.yaml", ok_mark, str(SEARCH_CONFIG_PATH)))
     else:
         results.append(("searches.yaml", warn_mark, "Will use example config — run 'applypilot init'"))
+        launch_requirements.append("Customize [bold]searches.yaml[/bold] with [bold]applypilot init[/bold] so ApplyPilot knows what roles to target.")
 
     # jobspy (discovery dep installed separately)
     try:
@@ -377,6 +384,9 @@ def doctor() -> None:
     except ImportError:
         results.append(("python-jobspy", warn_mark,
                         "pip install --no-deps python-jobspy && pip install pydantic tls-client requests markdownify regex"))
+        launch_requirements.append(
+            "Install [bold]python-jobspy[/bold] for Indeed/LinkedIn/Glassdoor/ZipRecruiter/Google Jobs discovery."
+        )
 
     # --- Tier 2 checks ---
     import os
@@ -394,6 +404,7 @@ def doctor() -> None:
     else:
         results.append(("LLM API key", fail_mark,
                         "Set GEMINI_API_KEY in ~/.applypilot/.env (run 'applypilot init')"))
+        launch_requirements.append("Set [bold]GEMINI_API_KEY[/bold] (or OpenAI / LLM_URL) in [bold]~/.applypilot/.env[/bold].")
 
     # --- Tier 3 checks ---
     # Claude Code CLI
@@ -403,6 +414,7 @@ def doctor() -> None:
     else:
         results.append(("Claude Code CLI", fail_mark,
                         "Install from https://claude.ai/code (needed for auto-apply)"))
+        launch_requirements.append("Install the [bold]Claude Code CLI[/bold] from [bold]https://claude.ai/code[/bold].")
 
     # Chrome
     try:
@@ -411,6 +423,7 @@ def doctor() -> None:
     except FileNotFoundError:
         results.append(("Chrome/Chromium", fail_mark,
                         "Install Chrome or set CHROME_PATH env var (needed for auto-apply)"))
+        launch_requirements.append("Install [bold]Chrome/Chromium[/bold] or set [bold]CHROME_PATH[/bold] for browser automation.")
 
     # Node.js / npx (for Playwright MCP)
     npx_bin = shutil.which("npx")
@@ -419,6 +432,7 @@ def doctor() -> None:
     else:
         results.append(("Node.js (npx)", fail_mark,
                         "Install Node.js 18+ from nodejs.org (needed for auto-apply)"))
+        launch_requirements.append("Install [bold]Node.js 18+[/bold] so [bold]npx[/bold] can run the Playwright MCP server.")
 
     # CapSolver (optional)
     capsolver = os.environ.get("CAPSOLVER_API_KEY")
@@ -449,6 +463,22 @@ def doctor() -> None:
         console.print("[dim]  → Tier 3 unlocks: auto-apply (needs Claude Code CLI + Chrome + Node.js)[/dim]")
     elif tier == 2:
         console.print("[dim]  → Tier 3 unlocks: auto-apply (needs Claude Code CLI + Chrome + Node.js)[/dim]")
+
+    console.print()
+    if launch_requirements:
+        console.print("[bold yellow]To run the complete end-to-end pipeline, you still need:[/bold yellow]")
+        for item in launch_requirements:
+            console.print(f"  • {item}")
+        console.print(
+            "\n[dim]Next step: run [bold]applypilot init[/bold] to fill the missing files and keys, "
+            "then rerun [bold]applypilot doctor[/bold].[/dim]"
+        )
+    else:
+        console.print("[bold green]You're ready to fully launch ApplyPilot.[/bold green]")
+        console.print(
+            "[dim]Next steps: run [bold]applypilot run[/bold] to discover and prepare jobs, "
+            "then [bold]applypilot apply[/bold] to submit applications.[/dim]"
+        )
 
     console.print()
 

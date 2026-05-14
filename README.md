@@ -94,6 +94,14 @@ Each stage is independent. Run them all or pick what you need.
 
 **Gemini API key is free.** Get one at [aistudio.google.com](https://aistudio.google.com). OpenAI and local models (Ollama/llama.cpp) are also supported.
 
+Want a one-line answer for your machine? Run:
+
+```bash
+applypilot doctor
+```
+
+It will tell you exactly what's missing before you can fully launch the end-to-end pipeline, including setup files, API keys, discovery dependencies, and auto-apply tooling.
+
 ### Optional
 
 | Component | What It Does |
